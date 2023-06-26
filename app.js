@@ -5,15 +5,15 @@ require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
-const encrypt = require('mongoose-encryption'); // used a new package
+// const encrypt = require('mongoose-encryption'); // used a new package
+const md5 = require("md5");
 
 const mongoose = require("mongoose");
-const { FindOperators } = require("mongodb");
+
 
 const app = express();
 
 // console.log(process.env.API_KEY);
-// console.log(process.env.SECRET);
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -27,7 +27,8 @@ const userSchema = new mongoose.Schema({
 });
 
 
-userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
+
+// userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
 const User = mongoose.model("User", userSchema);
 
@@ -47,7 +48,7 @@ app.get("/register", function (req, res) {
 app.post("/register", function (req, res) {
     const newUser = new User({
         email: req.body.username,
-        password: req.body.password
+        password: md5(req.body.password)
     })
     newUser.save();
     res.render("secrets");
@@ -64,7 +65,7 @@ app.post("/login", function (req, res) {
             console.log("User not found");
         }
         else{
-            if(foundUser.password === password){
+            if(foundUser.password === md5(password)){ // hash value of two same values will be same
                 res.render("secrets");
             }
         }
